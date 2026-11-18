@@ -321,10 +321,10 @@ local function newClient(spec)
         end
     end
     loadFrom(root, "LibStub/LibStub.lua")
-    loadFrom(root, "LibDeflate/LibDeflate.lua")
-    loadFrom(root, "LibSerialize/LibSerialize.lua")
-    loadXml(root .. "/../LibCrypto", "LibCrypto.xml")
-    loadXml(root, "LibMultiplayer.xml")
+    loadFrom(root, "LibDeflate", "lib.xml")
+    loadXml(root, "LibSerialize", "lib.xml")
+    loadXml(root .. "LibCrypto", "lib.xml")
+    loadXml(root, "lib.xml")
     client.lib = env.LibStub("LibMultiplayer-1.0")
     client.session = client.lib:New(spec.opts or { prefix = spec.prefix or "MyAddon" })
     world.clients[#world.clients + 1] = client
