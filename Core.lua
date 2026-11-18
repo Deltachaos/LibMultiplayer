@@ -49,7 +49,7 @@ Adler32 checksum of the serialized payload. Broadcasts and lobby advertisements
 are best-effort. Listing or joining a lobby joins a channel for that lobby.
 Lobby broadcasts on a password lobby are encrypted with that password. See
 README.md for the full usage. Run the tests with:
-lua5.1 LibMultiplayer/tests/test_reliable.lua
+lua5.1 ../LibUnitWow/run.lua
 ]]
 
 local MAJOR, MINOR = "LibMultiplayer-1.0", 1
@@ -250,7 +250,7 @@ function Lib:New(opts)
     return session
 end
 
-if not Lib._frame then
+if not Lib._frame and CreateFrame then
     local frame = CreateFrame("Frame")
     Lib._frame = frame
     frame:RegisterEvent("CHAT_MSG_ADDON")

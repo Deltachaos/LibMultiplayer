@@ -14,8 +14,12 @@ externals:
   LibCrypto:
     url: https://github.com/Deltachaos/LibCrypto
     branch: main
+  LibUnitWow:
+    url: https://github.com/Deltachaos/LibUnitWow
+    branch: main
 
 ignore:
   - tests
+  - LibUnitWow
   - LibDeflate/docs
   - LibDeflate/examples

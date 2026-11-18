@@ -12,7 +12,7 @@ LibMultiplayer is LoadOnDemand. Give the addon a dependency and WoW loads both l
 ## Dependencies: LibCrypto, LibMultiplayer
 ```
 
-The BigWigs packager reads `.pkgmeta` and fetches LibStub, LibDeflate, and LibSerialize. LibCrypto stays a separate addon. Interface versions in the TOC cover Classic through retail.
+The BigWigs packager reads `.pkgmeta` and fetches LibStub, LibDeflate, LibSerialize, and LibCrypto. Interface versions in the TOC cover Classic through retail.
 
 ```lua
 local session = LibStub("LibMultiplayer-1.0"):New({
@@ -129,7 +129,7 @@ A password seals `lobby:Broadcast` and `Broadcast(payload, "LOBBY")`. LibCrypto 
 ## Tests
 
 ```
-lua5.1 LibMultiplayer/tests/test_reliable.lua
+lua5.1 ../LibUnitWow/run.lua
 ```
 
-The runner loads LibCrypto from the sibling directory, then LibMultiplayer. It prints `all passed` when the suite succeeds. GitHub Actions builds the addon with the BigWigs packager, unpacks the zip, places LibCrypto beside it, and runs this file there.
+The suite is `Test.suite("LibMultiplayer", "reliable")`. It loads the addon through its TOC. GitHub Actions builds the addon with the BigWigs packager and runs `LibUnitWow/run.lua` against the unpacked zip. The release package leaves LibUnitWow out.

@@ -1,7 +1,6 @@
--- lua5.1 tests/test_reliable.lua
-local source = debug.getinfo(1, "S").source
-if source:sub(1, 1) == "@" then source = source:sub(2) end
-local root = source:match("^(.*)/tests/[^/]+$") or "."
+local Test = require("test")
+local assertEq = Test.assertEq
+local assertTrue = Test.assertTrue
 
 local world = {
     time = 1000,
@@ -16,35 +15,23 @@ local world = {
     channelById = {},
 }
 
-local failures = 0
-local function test(name, fn)
-    world.clients = {}
-    world.fail = {}
-    world.swallowD = {}
-    world.held = {}
-    world.holdD = false
-    world.corrupt = 0
-    world.channelSeq = 0
-    world.channelByName = {}
-    world.channelById = {}
-    world.time = world.time + 5
-    local ok, err = xpcall(fn, debug.traceback)
-    if ok then
-        io.write("ok   " .. name .. "\n")
-    else
-        failures = failures + 1
-        io.write("FAIL " .. name .. "\n" .. err .. "\n")
-    end
-end
+Test.suite("LibMultiplayer", "reliable")
 
-local function assertEq(actual, expected, message)
-    if actual ~= expected then
-        error((message or "not equal") .. "\n  actual: " .. tostring(actual) .. "\n  expected: " .. tostring(expected), 2)
-    end
-end
-
-local function assertTrue(value, message)
-    if not value then error(message or "expected true", 2) end
+local register = Test.test
+function Test.test(name, fn)
+    register(name, function()
+        world.clients = {}
+        world.fail = {}
+        world.swallowD = {}
+        world.held = {}
+        world.holdD = false
+        world.corrupt = 0
+        world.channelSeq = 0
+        world.channelByName = {}
+        world.channelById = {}
+        world.time = world.time + 5
+        fn()
+    end)
 end
 
 local function kindOf(text)
@@ -306,25 +293,7 @@ local function newClient(spec)
     }
     if spec.regional then env.RegionalUniqueNamesEnabled = function() return true end end
 
-    local function loadFrom(base, path)
-        local chunk, err = loadfile(base .. "/" .. path)
-        if not chunk then error(err) end
-        setfenv(chunk, env)
-        return chunk()
-    end
-    local function loadXml(base, name)
-        local xmlFile = assert(io.open(base .. "/" .. name, "r"))
-        local xml = xmlFile:read("*a")
-        xmlFile:close()
-        for file in xml:gmatch('file="([^"]+)"') do
-            loadFrom(base, file)
-        end
-    end
-    loadFrom(root, "LibStub/LibStub.lua")
-    loadFrom(root, "LibDeflate", "lib.xml")
-    loadXml(root, "LibSerialize", "lib.xml")
-    loadXml(root .. "LibCrypto", "lib.xml")
-    loadXml(root, "lib.xml")
+    Test.loadToc(Test.toc, env)
     client.lib = env.LibStub("LibMultiplayer-1.0")
     client.session = client.lib:New(spec.opts or { prefix = spec.prefix or "MyAddon" })
     world.clients[#world.clients + 1] = client
@@ -355,7 +324,7 @@ local function bnFriend(tag, accountID, character, gameID)
     }
 end
 
-test("delivers reliable messages in send order", function()
+Test.test("delivers reliable messages in send order", function()
     local alice = newClient({ id = "alice", unit = "Alice", gameAccountID = 1 })
     local bob = newClient({ id = "bob", unit = "Bob", gameAccountID = 2 })
     local got = {}
@@ -381,7 +350,7 @@ test("delivers reliable messages in send order", function()
     assertEq(got[3].n, 3)
 end)
 
-test("checksum mismatch is not delivered or acked", function()
+Test.test("checksum mismatch is not delivered or acked", function()
     local alice = newClient({ id = "alice", unit = "Alice" })
     local bob = newClient({ id = "bob", unit = "Bob" })
     local got = {}
@@ -398,7 +367,7 @@ test("checksum mismatch is not delivered or acked", function()
     assertTrue(acked, "retry acked")
 end)
 
-test("duplicate data is delivered once and acked twice", function()
+Test.test("duplicate data is delivered once and acked twice", function()
     local alice = newClient({ id = "alice", unit = "Alice" })
     local bob = newClient({ id = "bob", unit = "Bob" })
     local got = 0
@@ -421,7 +390,7 @@ test("duplicate data is delivered once and acked twice", function()
     assertTrue(acks >= 2, "duplicate was acked again")
 end)
 
-test("timeout sends a gap and the next message still arrives", function()
+Test.test("timeout sends a gap and the next message still arrives", function()
     local alice = newClient({ id = "alice", unit = "Alice", opts = opts({ timeout = 5 }) })
     local bob = newClient({ id = "bob", unit = "Bob" })
     local got, gaps, timed = {}, {}, false
@@ -442,7 +411,7 @@ test("timeout sends a gap and the next message still arrives", function()
     assertEq(got[1], "next")
 end)
 
-test("retries use exponential backoff", function()
+Test.test("retries use exponential backoff", function()
     local alice = newClient({ id = "alice", unit = "Alice", opts = opts({ timeout = 120 }) })
     local bob = newClient({ id = "bob", unit = "Bob" })
     world.holdD = true
@@ -463,7 +432,7 @@ test("retries use exponential backoff", function()
     end
 end)
 
-test("combat block holds the queue until it clears", function()
+Test.test("combat block holds the queue until it clears", function()
     local alice = newClient({ id = "alice", unit = "Alice", opts = opts({ blockInCombat = true }) })
     local bob = newClient({ id = "bob", unit = "Bob" })
     local got = 0
@@ -482,7 +451,7 @@ test("combat block holds the queue until it clears", function()
     assertEq(got, 1, "flush after combat")
 end)
 
-test("auto block follows combat only when lockdown cannot be queried", function()
+Test.test("auto block follows combat only when lockdown cannot be queried", function()
     local modern = newClient({
         id = "modern", unit = "Mod", lockdownApi = true,
         opts = opts({ blockInCombat = "auto", prefix = "ModA" }),
@@ -513,7 +482,7 @@ test("auto block follows combat only when lockdown cannot be queried", function(
     assertEq(sent, 0, "legacy client sent during combat")
 end)
 
-test("forever names collapse and whisper First-Surname", function()
+Test.test("forever names collapse and whisper First-Surname", function()
     local alice = newClient({
         id = "alice", unit = "Ann", regional = true, faction = "Alliance",
         roster = { "First Surname-CAMWOWEU4Realm9RPPvP", "Other Person-CAMWOWEU4Realm9RPPvP" },
@@ -543,7 +512,7 @@ test("forever names collapse and whisper First-Surname", function()
     assertEq(whispered, "First-Surname")
 end)
 
-test("same-realm retail whisper drops the realm", function()
+Test.test("same-realm retail whisper drops the realm", function()
     local alice = newClient({ id = "alice", unit = "Alice", realm = "Stormrage" })
     local bob = newClient({ id = "bob", unit = "Bob", realm = "Area 52" })
     assertTrue(alice.session:Send(alice.session:Player("Alice-Stormrage"), "selfskip") == false)
@@ -560,7 +529,7 @@ test("same-realm retail whisper drops the realm", function()
     assertTrue(not targets["Cara-Area 52"], "realm spaces were kept")
 end)
 
-test("guild discovery merges a battlenet friend and sends game data", function()
+Test.test("guild discovery merges a battlenet friend and sends game data", function()
     local alice = newClient({
         id = "alice", unit = "Alice", guild = "guild", gameAccountID = 10,
         friends = { bnFriend("Bob#1234", 2, "Bob", 20) },
@@ -591,7 +560,7 @@ test("guild discovery merges a battlenet friend and sends game data", function()
     assertTrue(sawBN, "data was not sent as game data")
 end)
 
-test("other faction on the channel is addressed there", function()
+Test.test("other faction on the channel is addressed there", function()
     local alice = newClient({ id = "alice", unit = "Alice", faction = "Alliance" })
     local bob = newClient({ id = "bob", unit = "Bob", faction = "Horde" })
     alice.session:EnableChannel("MyAddon")
@@ -615,7 +584,7 @@ test("other faction on the channel is addressed there", function()
     assertTrue(channel, "other faction was not sent on the channel")
 end)
 
-test("rejected whisper resends on the channel only before a direct whisper", function()
+Test.test("rejected whisper resends on the channel only before a direct whisper", function()
     local alice = newClient({ id = "alice", unit = "Alice", faction = "Alliance" })
     local carol = newClient({ id = "carol", unit = "Carol", faction = "Alliance" })
     alice.session:EnableChannel("MyAddon")
@@ -653,7 +622,7 @@ test("rejected whisper resends on the channel only before a direct whisper", fun
     end
 end)
 
-test("lobby cache lists, drops a delist, and drops silence", function()
+Test.test("lobby cache lists, drops a delist, and drops silence", function()
     local alice = newClient({ id = "alice", unit = "Alice" })
     local bob = newClient({ id = "bob", unit = "Bob" })
     alice.session:EnableChannel("Board")
@@ -683,7 +652,7 @@ test("lobby cache lists, drops a delist, and drops silence", function()
     assertEq(#watcher.session:Lobbies(), 0, "silent lobby stayed cached")
 end)
 
-test("join grows the roster and the host relays only members", function()
+Test.test("join grows the roster and the host relays only members", function()
     local host = newClient({ id = "host", unit = "Host", gameAccountID = 1 })
     local alice = newClient({ id = "alice", unit = "Alice", gameAccountID = 2 })
     local carol = newClient({ id = "carol", unit = "Carol", gameAccountID = 3 })
@@ -730,7 +699,7 @@ test("join grows the roster and the host relays only members", function()
     assertTrue(not leaked, "host forwarded a non-member")
 end)
 
-test("broadcasts are delivered without an ack", function()
+Test.test("broadcasts are delivered without an ack", function()
     local alice = newClient({ id = "alice", unit = "Alice", guild = "guild" })
     local bob = newClient({ id = "bob", unit = "Bob", guild = "guild" })
     local channel, payload
@@ -750,7 +719,7 @@ test("broadcasts are delivered without an ack", function()
     assertEq(acks, 0)
 end)
 
-test("a lobby broadcast stays on that lobby channel", function()
+Test.test("a lobby broadcast stays on that lobby channel", function()
     local host = newClient({ id = "host", unit = "Host" })
     local alice = newClient({ id = "alice", unit = "Alice" })
     local stranger = newClient({ id = "stranger", unit = "Stranger" })
@@ -816,7 +785,7 @@ test("a lobby broadcast stays on that lobby channel", function()
     assertTrue(host.channels.Board ~= nil, "delist left the board channel")
 end)
 
-test("lobby password seals broadcasts and spectators use their own seats", function()
+Test.test("lobby password seals broadcasts and spectators use their own seats", function()
     local host = newClient({ id = "host", unit = "Host" })
     local alice = newClient({ id = "alice", unit = "Alice" })
     local carol = newClient({ id = "carol", unit = "Carol" })
@@ -903,9 +872,3 @@ test("lobby password seals broadcasts and spectators use their own seats", funct
     end
     assertTrue(encrypted, "lobby broadcast was not encrypted")
 end)
-
-if failures > 0 then
-    io.write(failures .. " failed\n")
-    os.exit(1)
-end
-io.write("all passed\n")
