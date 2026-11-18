@@ -147,7 +147,10 @@ local function newClient(spec)
     spec = spec or {}
     local env = { _G = nil }
     env._G = env
-    setmetatable(env, { __index = _G })
+    setmetatable(env, { __index = function(_, key)
+        if key == "LibStub" then return nil end
+        return _G[key]
+    end })
     local client = {
         id = spec.id,
         unit = spec.unit,

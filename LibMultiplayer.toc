@@ -5,8 +5,8 @@
 ## Version: 1.0.0
 ## LoadOnDemand: 1
 
-LibStub/LibStub.lua
-LibDeflate/lib.xml
-LibSerialize/lib.xml
-LibCrypto/lib.xml
+Libs/LibStub/LibStub.lua
+Libs/LibDeflate/lib.xml
+Libs/LibSerialize/lib.xml
+Libs/LibCrypto/lib.xml
 lib.xml

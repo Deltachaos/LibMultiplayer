@@ -1,6 +1,2 @@
 /.release/
-/LibStub/
-/LibDeflate/
-/LibSerialize/
-/LibCrypto/
-/LibUnitWow/
+/Libs/

@@ -1,25 +1,25 @@
 package-as: LibMultiplayer
 
 externals:
-  LibStub:
+  Libs/LibStub:
     url: https://github.com/WoWUIDev/Ace3
     branch: master
     path: LibStub
-  LibDeflate:
+  Libs/LibDeflate:
     url: https://github.com/SafeteeWoW/LibDeflate
     branch: main
-  LibSerialize:
+  Libs/LibSerialize:
     url: https://github.com/rossnichols/LibSerialize
     branch: main
-  LibCrypto:
+  Libs/LibCrypto:
     url: https://github.com/Deltachaos/LibCrypto
     branch: main
-  LibUnitWow:
+  Libs/LibUnitWow:
     url: https://github.com/Deltachaos/LibUnitWow
     branch: main
 
 ignore:
   - tests
-  - LibUnitWow
-  - LibDeflate/docs
-  - LibDeflate/examples
+  - Libs/LibUnitWow
+  - Libs/LibDeflate/docs
+  - Libs/LibDeflate/examples
