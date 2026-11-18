@@ -1,0 +1,5 @@
+/.release/
+/LibStub/
+/LibDeflate/
+/LibSerialize/
+/LibCrypto

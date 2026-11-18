@@ -1,0 +1,37 @@
+name: LibMultiplayer
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: Lua 5.1
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: LibMultiplayer
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          repository: Deltachaos/LibCrypto
+          path: LibCrypto
+      - name: Install Lua 5.1
+        run: sudo apt-get update && sudo apt-get install -y lua5.1
+      - name: Keep tests in the package
+        working-directory: LibMultiplayer
+        run: sed -i '/^ignore:/,$d' .pkgmeta
+      - uses: BigWigsMods/packager@v2
+        with:
+          args: -d -t LibMultiplayer
+      - name: Test the package
+        run: |
+          set -euo pipefail
+          zipfile=$(find LibMultiplayer/.release -maxdepth 1 -type f -name '*.zip' ! -name '*nolib*' -print -quit)
+          test -n "$zipfile"
+          rm -rf "${RUNNER_TEMP}/pkg"
+          unzip -q "$zipfile" -d "${RUNNER_TEMP}/pkg"
+          rm -rf "${RUNNER_TEMP}/pkg/LibCrypto"
+          cp -a LibCrypto "${RUNNER_TEMP}/pkg/LibCrypto"
+          lua5.1 "${RUNNER_TEMP}/pkg/LibMultiplayer/tests/test_reliable.lua"

@@ -1,0 +1,12 @@
+## Interface: 11508, 11509, 16001, 20506, 30405, 38002, 40402, 50504, 120100, 120105, 120107
+## Title: LibMultiplayer
+## Notes: Player discovery, reliable messaging, and lobbies for WoW addons
+## Author: LibMultiplayer
+## Version: 1.0.0
+## LoadOnDemand: 1
+
+LibStub/LibStub.lua
+LibDeflate/lib.xml
+LibSerialize/lib.xml
+LibCrypto/lib.xml
+lib.xml
