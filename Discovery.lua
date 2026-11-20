@@ -205,8 +205,12 @@ function Session:Discover(opts)
     if where == "all" then
         set.guild, set.group, set.friends, set.battlenet = true, true, true, true
         if self.channelId or self.wantChannel then set.channel = true end
+    elseif type(where) == "string" then
+        set[where] = true
     else
-        for i = 1, #where do set[where[i]] = true end
+        for i = 1, #where do
+            if where[i] then set[where[i]] = true end
+        end
     end
     self.discoverNonce = (self.discoverNonce or 0) + 1
     local nonce = tostring(self.discoverNonce) .. tostring(math.random(100000, 999999))
