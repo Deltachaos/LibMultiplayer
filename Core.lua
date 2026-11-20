@@ -41,6 +41,7 @@ Reliable player-to-player messaging, discovery, and lobbies for WoW addons.
     session:Leave()
     session:Lobbies()
     session:OnLobbies(function(list) end)
+    session:OnLobby(function(lobby) end)  -- first time a lobby is seen
 
 A player object hides whisper addressing and the route. Send tries Battle.net game
 data, then the hidden channel, then an addon whisper, then the lobby host.
@@ -52,7 +53,7 @@ README.md for the full usage. Run the tests with:
 lua5.1 ../LibUnitWow/run.lua
 ]]
 
-local MAJOR, MINOR = "LibMultiplayer-1.0", 1
+local MAJOR, MINOR = "LibMultiplayer-1.0", 2
 local Lib = LibStub:NewLibrary(MAJOR, MINOR)
 if not Lib then return end
 
@@ -233,6 +234,7 @@ local function newSession(opts)
         whisperLog = {},
         lobbies = {},
         lobbyListeners = {},
+        lobbyNewListeners = {},
     }, Session)
     return session
 end

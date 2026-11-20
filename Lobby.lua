@@ -32,6 +32,18 @@ function Session:OnLobbies(fn)
     self.lobbyListeners[#self.lobbyListeners + 1] = fn
 end
 
+function Session:OnLobby(fn)
+    self.lobbyNewListeners = self.lobbyNewListeners or {}
+    self.lobbyNewListeners[#self.lobbyNewListeners + 1] = fn
+end
+
+function Session:FireLobby(id)
+    if not self.lobbies[id] then return end
+    local lobby = self:WrapLobby(id)
+    local listeners = copyList(self.lobbyNewListeners or {})
+    for i = 1, #listeners do listeners[i](lobby) end
+end
+
 function Session:WrapLobby(id)
     local session = self
     local api = {}
@@ -172,7 +184,8 @@ function Session:UpsertLobby(desc, localListed)
         return nil
     end
     local entry = self.lobbies[desc.id]
-    local changed = not entry
+    local created = not entry
+    local changed = created
     if not entry then
         entry = { id = desc.id }
         self.lobbies[desc.id] = entry
@@ -213,6 +226,7 @@ function Session:UpsertLobby(desc, localListed)
         self.hosted = entry
         entry.localListed = true
     end
+    if created and not localListed then self:FireLobby(desc.id) end
     if changed then self:FireLobbies() end
     return entry
 end
@@ -366,6 +380,7 @@ function Session:ListLobby(desc)
     self:WantLobbyChannel(entry)
     self:TryJoinLobbyChannel(entry)
     self:Advertise(entry)
+    self:FireLobby(id)
     return self:WrapLobby(id)
 end
 

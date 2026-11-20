@@ -110,9 +110,12 @@ session:DelistLobby()
 session:Leave()
 session:Lobbies()
 session:OnLobbies(function(list) end)
+session:OnLobby(function(lobby) end)
 ```
 
 A session hosts one lobby and sits in one lobby. `ListLobby` while you are a guest of someone else returns nil. Calling it again while you are already the host returns the existing lobby.
+
+`OnLobbies` receives the full cached list whenever a lobby is added, updated, or removed. `OnLobby` receives one lobby the first time it is seen, including a lobby this session just listed. A repeated advertisement does not call it again.
 
 `Join` is asynchronous. `true` means the request was queued, not that you were accepted. `OnJoinResult` fires with `accepted` and, on failure, `"password"`, `"full"`, `"spectators"`, or `"no-route"`. An empty password is treated as no password. If the advertisement already says the lobby is locked and the password is missing, `Join` returns false and reports `"password"` without sending. A locked lobby asks for a one-time proof of the password. The password itself is not sent, stored in the advertisement, or copied into `info`.
 

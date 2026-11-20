@@ -875,3 +875,23 @@ Test.test("lobby password seals broadcasts and spectators use their own seats", 
     end
     assertTrue(encrypted, "lobby broadcast was not encrypted")
 end)
+
+Test.test("OnLobby reports a lobby once when it is first seen", function()
+    local alice = newClient({ id = "alice", unit = "Alice" })
+    local bob = newClient({ id = "bob", unit = "Bob" })
+    alice.session:EnableChannel("Board")
+    bob.session:EnableChannel("Board")
+    advance({ alice, bob }, 0.5)
+    local seen = 0
+    local title
+    bob.session:OnLobby(function(lobby)
+        seen = seen + 1
+        title = lobby:Title()
+    end)
+    alice.session:ListLobby({ title = "Once", capacity = 2, info = {} })
+    advance({ alice, bob }, 0.5)
+    assertEq(seen, 1)
+    assertEq(title, "Once")
+    advance({ alice, bob }, 31)
+    assertEq(seen, 1, "a repeated advertisement looked like a new lobby")
+end)
