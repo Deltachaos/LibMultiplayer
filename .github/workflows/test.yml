@@ -27,4 +27,4 @@ jobs:
           rm -rf "${RUNNER_TEMP}/pkg"
           unzip -q "$zipfile" -d "${RUNNER_TEMP}/pkg"
           cd "${RUNNER_TEMP}/pkg/LibMultiplayer"
-          lua5.1 Libs/LibUnitWow/run.lua
+          FAIL_ON_MISSING_SNAPSHOTS=1 TEST_WORKERS=$(nproc --all) lua5.1 Libs/LibUnitWow/run.lua
